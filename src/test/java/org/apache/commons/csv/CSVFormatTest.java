@@ -48,7 +48,6 @@ import java.util.Arrays;
 import java.util.Objects;
 
 import org.apache.commons.csv.CSVFormat.Builder;
-import org.apache.commons.csv.CSVFormatTest.HEADER;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 
@@ -61,8 +60,8 @@ public class CSVFormatTest {
         // empty enum.
     }
 
-    public enum HEADER {
-        Name, Email, Phone
+    public enum Header {
+        NAME, EMAIL, PHONE
     }
 
     private static void assertNotEquals(final Object right, final Object left) {
@@ -1144,6 +1143,7 @@ public class CSVFormatTest {
 
         final Character character = Character.valueOf('n');
 
+        @SuppressWarnings("deprecation")
         final CSVFormat csvFormatTwo = csvFormat.withCommentMarker(character);
 
         assertNull(csvFormat.getEscapeCharacter());
@@ -1312,6 +1312,7 @@ public class CSVFormatTest {
     @SuppressWarnings("deprecation")
     @Test
     public void testWithDelimiter() {
+        @SuppressWarnings("deprecation")
         final CSVFormat formatWithDelimiter = CSVFormat.DEFAULT.withDelimiter('!');
         assertEquals('!', formatWithDelimiter.getDelimiter());
     }
@@ -1403,6 +1404,7 @@ public class CSVFormatTest {
         assertNull(csvFormat.getEscapeCharacter());
 
         final Object[] objectArray = new Object[8];
+        @SuppressWarnings("deprecation")
         final CSVFormat csvFormatTwo = csvFormat.withHeaderComments(objectArray);
 
         assertEquals('\"', (char) csvFormat.getQuoteCharacter());
@@ -1534,7 +1536,7 @@ public class CSVFormatTest {
     @Test
     public void testWithHeaderEnum() {
         @SuppressWarnings("deprecation")
-        final CSVFormat formatWithHeader = CSVFormat.DEFAULT.withHeader(HEADER.class);
+        final CSVFormat formatWithHeader = CSVFormat.DEFAULT.withHeader(Header.class);
         assertArrayEquals(new String[] { "Name", "Email", "Phone" }, formatWithHeader.getHeader());
     }
 

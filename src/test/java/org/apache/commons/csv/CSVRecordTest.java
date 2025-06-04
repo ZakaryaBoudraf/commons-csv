@@ -361,7 +361,12 @@ public class CSVRecordTest {
     public void testToMapWithShortRecord() throws Exception {
         try (CSVParser parser = CSVParser.parse("a,b", CSVFormat.DEFAULT.withHeader("A", "B", "C"))) {
             final CSVRecord shortRec = parser.iterator().next();
-            shortRec.toMap();
+            Map<String, String> map = shortRec.toMap();
+            assertNotNull(map, "Map should not be null.");
+            assertEquals(3, map.size(), "Map should have 3 keys.");
+            assertEquals("a", map.get("A"));
+            assertEquals("b", map.get("B"));
+            assertNull(map.get("C"), "Missing header should map to null value.");
         }
     }
 

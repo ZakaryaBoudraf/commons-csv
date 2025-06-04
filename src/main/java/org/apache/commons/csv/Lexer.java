@@ -233,79 +233,98 @@ final class Lexer implements Closeable {
      * @throws CSVException Thrown on invalid input.
      */
     Token nextToken(final Token token) throws IOException {
-        // Get the last read char (required for empty line detection)
         int lastChar = reader.getLastChar();
-        // read the next char and set eol
         int c = reader.read();
-        // Note: The following call will swallow LF if c == CR. But we don't need to know if the last char was CR or LF - they are equivalent here.
         boolean eol = readEndOfLine(c);
-        // empty line detection: eol AND (last char was EOL or beginning)
+
         if (ignoreEmptyLines) {
-            while (eol && isStartOfLine(lastChar)) {
-                // Go on char ahead ...
-                lastChar = c;
-                c = reader.read();
-                eol = readEndOfLine(c);
-                // reached the end of the file without any content (empty line at the end)
-                if (isEndOfFile(c)) {
-                    token.type = Token.Type.EOF;
-                    // don't set token.isReady here because no content
-                    return token;
-                }
-            }
-        }
-        // Did we reach EOF during the last iteration already? EOF
-        if (isEndOfFile(lastChar) || !isLastTokenDelimiter && isEndOfFile(c)) {
-            token.type = Token.Type.EOF;
-            // don't set token.isReady here because no content
-            return token;
-        }
-        if (isStartOfLine(lastChar) && isCommentStart(c)) {
-            final String line = reader.readLine();
-            if (line == null) {
-                token.type = Token.Type.EOF;
-                // don't set token.isReady here because no content
+            if (skipEmptyLines(token, lastChar, c, eol)) {
                 return token;
             }
-            final String comment = line.trim();
-            token.content.append(comment);
-            token.type = Token.Type.COMMENT;
+            // update c and eol after skipping
+            lastChar = reader.getLastChar();
+            c = reader.read();
+            eol = readEndOfLine(c);
+        }
+
+        if (isEndOfFile(lastChar) || (!isLastTokenDelimiter && isEndOfFile(c))) {
+            setTokenType(token, Token.Type.EOF);
             return token;
         }
-        // Important: make sure a new char gets consumed in each iteration
-        while (token.type == Token.Type.INVALID) {
-            // ignore whitespaces at beginning of a token
-            if (ignoreSurroundingSpaces) {
-                while (Character.isWhitespace((char) c) && !isDelimiter(c) && !eol) {
-                    c = reader.read();
-                    eol = readEndOfLine(c);
-                }
-            }
-            // ok, start of token reached: encapsulated, or token
-            if (isDelimiter(c)) {
-                // empty token return TOKEN("")
-                token.type = Token.Type.TOKEN;
-            } else if (eol) {
-                // empty token return EORECORD("")
-                // noop: token.content.append("");
-                token.type = Token.Type.EORECORD;
-            } else if (isQuoteChar(c)) {
-                // consume encapsulated token
-                parseEncapsulatedToken(token);
-            } else if (isEndOfFile(c)) {
-                // end of file return EOF()
-                // noop: token.content.append("");
-                token.type = Token.Type.EOF;
-                token.isReady = true; // there is data at EOF
-            } else {
-                // next token must be a simple token
-                // add removed blanks when not ignoring whitespace chars...
-                parseSimpleToken(token, c);
+
+        if (isStartOfLine(lastChar) && isCommentStart(c)) {
+            if (handleComment(token)) {
+                return token;
             }
         }
+
+        processToken(token, c, eol);
         return token;
     }
 
+    // Helper to skip empty lines
+    private boolean skipEmptyLines(Token token, int lastChar, int c, boolean eol) throws IOException {
+        while (eol && isStartOfLine(lastChar)) {
+            lastChar = c;
+            c = reader.read();
+            eol = readEndOfLine(c);
+            if (isEndOfFile(c)) {
+                setTokenType(token, Token.Type.EOF);
+                return true;
+            }
+        }
+        return false;
+    }
+
+    // Helper to set token type
+    private void setTokenType(Token token, Token.Type type) {
+        token.type = type;
+        // don't set token.isReady here because no content
+    }
+
+    // Helper to handle comments
+    private boolean handleComment(Token token) throws IOException {
+        final String line = reader.readLine();
+        if (line == null) {
+            setTokenType(token, Token.Type.EOF);
+            return true;
+        }
+        final String comment = line.trim();
+        token.content.append(comment);
+        token.type = Token.Type.COMMENT;
+        return true;
+    }
+
+    // Helper to process the main token logic
+    private void processToken(Token token, int c, boolean eol) throws IOException {
+        while (token.type == Token.Type.INVALID) {
+            if (ignoreSurroundingSpaces) {
+                c = skipLeadingWhitespace(c, eol);
+                eol = readEndOfLine(c);
+            }
+            if (isDelimiter(c)) {
+                token.type = Token.Type.TOKEN;
+            } else if (eol) {
+                token.type = Token.Type.EORECORD;
+            } else if (isQuoteChar(c)) {
+                parseEncapsulatedToken(token);
+            } else if (isEndOfFile(c)) {
+                token.type = Token.Type.EOF;
+                token.isReady = true; // there is data at EOF
+            } else {
+                parseSimpleToken(token, c);
+            }
+        }
+    }
+
+    // Helper to skip leading whitespace
+    private int skipLeadingWhitespace(int c, boolean eol) throws IOException {
+        while (Character.isWhitespace((char) c) && !isDelimiter(c) && !eol) {
+            c = reader.read();
+            eol = readEndOfLine(c);
+        }
+        return c;
+    }
     private int nullToDisabled(final Character c) {
         return c == null ? Constants.UNDEFINED : c.charValue(); // Explicit unboxing
     }

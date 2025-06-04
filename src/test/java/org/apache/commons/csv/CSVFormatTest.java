@@ -1111,7 +1111,7 @@ public class CSVFormatTest {
     @Test
     public void testToStringAndWithCommentMarkerTakingCharacter() {
 
-        final CSVFormat.Predefined csvFormatPredefined = CSVFormat.Predefined.Default;
+        final CSVFormat.Predefined csvFormatPredefined = CSVFormat.Predefined.DEFAULT;
         final CSVFormat csvFormat = csvFormatPredefined.getFormat();
 
         assertNull(csvFormat.getEscapeCharacter());

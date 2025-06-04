@@ -2613,25 +2613,40 @@ public final class CSVFormat implements Serializable {
      * @throws IllegalArgumentException Throw when any attribute is invalid or inconsistent with other attributes.
      */
     private void validate() throws IllegalArgumentException {
-        if (quoteCharacter != null && contains(delimiter, quoteCharacter.charValue())) { // Explicit (un)boxing is intentional
+        checkDelimiterConflicts();
+        checkQuoteEscapeCommentConflicts();
+        checkEscapeMode();
+        checkHeaders();
+    }
+
+    private void checkDelimiterConflicts() {
+        if (quoteCharacter != null && contains(delimiter, quoteCharacter.charValue())) {
             throw new IllegalArgumentException("The quoteChar character and the delimiter cannot be the same ('" + quoteCharacter + "')");
         }
-        if (escapeCharacter != null && contains(delimiter, escapeCharacter.charValue())) { // Explicit (un)boxing is intentional
+        if (escapeCharacter != null && contains(delimiter, escapeCharacter.charValue())) {
             throw new IllegalArgumentException("The escape character and the delimiter cannot be the same ('" + escapeCharacter + "')");
         }
-        if (commentMarker != null && contains(delimiter, commentMarker.charValue())) { // Explicit (un)boxing is intentional
+        if (commentMarker != null && contains(delimiter, commentMarker.charValue())) {
             throw new IllegalArgumentException("The comment start character and the delimiter cannot be the same ('" + commentMarker + "')");
         }
+    }
+
+    private void checkQuoteEscapeCommentConflicts() {
         if (quoteCharacter != null && quoteCharacter.equals(commentMarker)) {
             throw new IllegalArgumentException("The comment start character and the quoteChar cannot be the same ('" + commentMarker + "')");
         }
         if (escapeCharacter != null && escapeCharacter.equals(commentMarker)) {
             throw new IllegalArgumentException("The comment start and the escape character cannot be the same ('" + commentMarker + "')");
         }
+    }
+
+    private void checkEscapeMode() {
         if (escapeCharacter == null && quoteMode == QuoteMode.NONE) {
             throw new IllegalArgumentException("Quote mode set to NONE but no escape character is set");
         }
-        // Validate headers
+    }
+
+    private void checkHeaders() {
         if (headers != null && duplicateHeaderMode != DuplicateHeaderMode.ALLOW_ALL) {
             final Set<String> dupCheckSet = new HashSet<>(headers.length);
             final boolean emptyDuplicatesAllowed = duplicateHeaderMode == DuplicateHeaderMode.ALLOW_EMPTY;

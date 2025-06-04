@@ -20,6 +20,9 @@
 package org.apache.commons.csv;
 
 import static org.apache.commons.io.IOUtils.EOF;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.io.BufferedReader;
 import java.io.File;
@@ -39,6 +42,7 @@ import java.util.zip.GZIPInputStream;
 
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
+import org.junit.jupiter.api.Test;
 
 /**
  * Basic test harness.
@@ -340,6 +344,22 @@ public class PerformanceTest {
             show(split ? "file+split" : "file", stats, startMillis);
         }
         show();
+    }
+    @Test
+    public void testStatsConstructorAndFields() {
+        PerformanceTest.Stats stats = new PerformanceTest.Stats(10, 20);
+        assertEquals(10, stats.count);
+        assertEquals(20, stats.fields);
+    }
+
+    @Test
+    public void testPropertyNamesNotEmpty() {
+        assertTrue(PROPERTY_NAMES.length > 0, "PROPERTY_NAMES should not be empty");
+    }
+
+    @Test
+    public void testFormatIsNotNull() {
+        assertNotNull(format, "CSVFormat should not be null");
     }
 }
 

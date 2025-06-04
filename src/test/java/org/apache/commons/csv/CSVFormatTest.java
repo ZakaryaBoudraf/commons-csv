@@ -838,7 +838,7 @@ public class CSVFormatTest {
         assertFalse(csvFormatTwo.getTrim());
 
     }
-    
+
     @SuppressWarnings("deprecation")
     @Test
     public void testJiraCsv236() {
@@ -1545,7 +1545,9 @@ public class CSVFormatTest {
     public void testWithHeaderEnumNull() {
         final CSVFormat format = CSVFormat.DEFAULT;
         final Class<Enum<?>> simpleName = null;
-        format.withHeader(simpleName);
+        CSVFormat result = format.withHeader(simpleName);
+        assertNotNull(result);
+        assertEquals(0, result.getHeader().length);
     }
 
     @SuppressWarnings("deprecation")
@@ -1553,7 +1555,9 @@ public class CSVFormatTest {
     public void testWithHeaderResultSetNull() throws SQLException {
         final CSVFormat format = CSVFormat.DEFAULT;
         final ResultSet resultSet = null;
-        format.withHeader(resultSet);
+        CSVFormat result = format.withHeader(resultSet);
+        assertNotNull(result);
+        assertEquals(0, result.getHeader().length);
     }
 
     @SuppressWarnings("deprecation")

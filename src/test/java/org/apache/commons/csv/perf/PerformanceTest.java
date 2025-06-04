@@ -19,6 +19,8 @@
 
 package org.apache.commons.csv.perf;
 
+import static org.junit.jupiter.api.Assertions.assertTrue;
+
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -121,7 +123,7 @@ public class PerformanceTest {
     @Test
     public void testReadBigFile() throws Exception {
         long bestTime = Long.MAX_VALUE;
-        long count;
+        long count = 0;
         for (int i = 0; i < this.max; i++) {
             final long startMillis;
             try (BufferedReader in = createBufferedReader()) {
@@ -133,5 +135,7 @@ public class PerformanceTest {
             println(String.format("File read in %,d milliseconds: %,d lines.", totalMillis, count));
         }
         println(String.format("Best time out of %,d is %,d milliseconds.", this.max, bestTime));
+        // Add assertion: ensure at least one line was read
+        assertTrue(count > 0, "Should read at least one line from the big file");
     }
 }

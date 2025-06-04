@@ -212,22 +212,32 @@ final class ExtendedBufferedReader extends UnsynchronizedBufferedReader {
         }
         final int len = super.read(buf, offset, length);
         if (len > 0) {
-            for (int i = offset; i < offset + len; i++) {
-                final char ch = buf[i];
-                if (ch == LF) {
-                    if (CR != (i > offset ? buf[i - 1] : lastChar)) {
-                        lineNumber++;
-                    }
-                } else if (ch == CR) {
-                    lineNumber++;
-                }
-            }
+            updateLineNumber(buf, offset, len);
             lastChar = buf[offset + len - 1];
         } else if (len == EOF) {
             lastChar = EOF;
         }
         position += len;
         return len;
+    }
+
+    // Helper method to update line number
+    private void updateLineNumber(final char[] buf, final int offset, final int len) {
+        for (int i = offset; i < offset + len; i++) {
+            final char ch = buf[i];
+            if (ch == LF) {
+                if (!isPreviousCharCR(buf, i, offset)) {
+                    lineNumber++;
+                }
+            } else if (ch == CR) {
+                lineNumber++;
+            }
+        }
+    }
+
+    // Helper method to check if previous char is CR
+    private boolean isPreviousCharCR(final char[] buf, int i, int offset) {
+        return CR == (i > offset ? buf[i - 1] : lastChar);
     }
 
     /**

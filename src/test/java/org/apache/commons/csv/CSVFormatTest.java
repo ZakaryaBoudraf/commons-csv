@@ -146,6 +146,10 @@ public class CSVFormatTest {
         final CSVFormat format = CSVFormat.DEFAULT.builder().setHeader(header).get();
         assertEquals(2, format.getHeader().length);
         assertArrayEquals(header, format.getHeader());
+        // Additional assertion: check that both header elements are equal and not null
+        assertNotNull(format.getHeader()[0]);
+        assertNotNull(format.getHeader()[1]);
+        assertEquals(format.getHeader()[0], format.getHeader()[1]);
     }
 
     @SuppressWarnings("deprecation")

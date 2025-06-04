@@ -62,6 +62,7 @@ import org.apache.commons.math3.analysis.function.Add;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.function.Executable;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.EnumSource;
 import org.junit.jupiter.params.provider.ValueSource;
@@ -1576,13 +1577,14 @@ public class CSVParserTest {
     }
 
     private void assertIOExceptionThrown(String input, CSVFormat csvFormat) {
-        assertThrows(IOException.class, () -> {
+        Executable executable = () -> {
             try (CSVParser parser = csvFormat.parse(new StringReader(input))) {
                 parser.nextRecord();
             }
-        });
+        };
+        assertThrows(IOException.class, executable);
     }
-    
+
     @Test
     public void testParseWithQuoteWithEscape() throws IOException {
         final String source = "'a?,b?,c?d',xyz";

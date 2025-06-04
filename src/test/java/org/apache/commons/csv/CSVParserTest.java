@@ -1565,13 +1565,22 @@ public class CSVParserTest {
             assertEquals("xyz", csvRecord.get(1));
         }
     }
-
+    
     @Test
     public void testParseWithQuoteThrowsException() {
         final CSVFormat csvFormat = CSVFormat.DEFAULT.withQuote('\'');
-        assertThrows(IOException.class, () -> csvFormat.parse(new StringReader("'a,b,c','")).nextRecord());
-        assertThrows(IOException.class, () -> csvFormat.parse(new StringReader("'a,b,c'abc,xyz")).nextRecord());
-        assertThrows(IOException.class, () -> csvFormat.parse(new StringReader("'abc'a,b,c',xyz")).nextRecord());
+        assertThrows(IOException.class, () -> {
+            CSVParser parser = csvFormat.parse(new StringReader("'a,b,c','"));
+            parser.nextRecord();
+        });
+        assertThrows(IOException.class, () -> {
+            CSVParser parser = csvFormat.parse(new StringReader("'a,b,c'abc,xyz"));
+            parser.nextRecord();
+        });
+        assertThrows(IOException.class, () -> {
+            CSVParser parser = csvFormat.parse(new StringReader("'abc'a,b,c',xyz"));
+            parser.nextRecord();
+        });
     }
 
     @Test

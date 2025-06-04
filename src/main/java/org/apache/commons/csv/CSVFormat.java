@@ -2308,10 +2308,10 @@ public final class CSVFormat implements Serializable {
         }
         println(appendable);
     }
-
+    
     /*
-     * This method must only be called if escaping is enabled, otherwise can throw exceptions.
-     */
+    * This method must only be called if escaping is enabled, otherwise can throw exceptions.
+    */
     private void printWithEscapes(final CharSequence charSeq, final Appendable appendable) throws IOException {
         int start = 0;
         int pos = 0;
@@ -2319,27 +2319,24 @@ public final class CSVFormat implements Serializable {
         final char[] delimArray = getDelimiterCharArray();
         final int delimLength = delimArray.length;
         final char escape = getEscapeChar();
+
         while (pos < end) {
             char c = charSeq.charAt(pos);
             final boolean isDelimiterStart = isDelimiter(c, charSeq, pos, delimArray, delimLength);
             final boolean isCr = c == Constants.CR;
             final boolean isLf = c == Constants.LF;
-            if (isCr || isLf || c == escape || isDelimiterStart) {
+            final boolean needsEscape = isCr || isLf || c == escape || isDelimiterStart;
+
+            if (needsEscape) {
                 // write out segment up until this char
                 if (pos > start) {
                     appendable.append(charSeq, start, pos);
                 }
-                if (isLf) {
-                    c = 'n';
-                } else if (isCr) {
-                    c = 'r';
-                }
-                escape(c, appendable);
+                escapeSpecialChar(c, isCr, isLf, appendable);
+
                 if (isDelimiterStart) {
-                    for (int i = 1; i < delimLength; i++) {
-                        pos++;
-                        escape(charSeq.charAt(pos), appendable);
-                    }
+                    escapeDelimiterChars(charSeq, appendable, pos, delimLength);
+                    pos += delimLength - 1;
                 }
                 start = pos + 1; // start on the current char after this one
             }
@@ -2349,6 +2346,23 @@ public final class CSVFormat implements Serializable {
         // write last segment
         if (pos > start) {
             appendable.append(charSeq, start, pos);
+        }
+    }
+
+    // Helper method to escape special characters
+    private void escapeSpecialChar(char c, boolean isCr, boolean isLf, Appendable appendable) throws IOException {
+        if (isLf) {
+            c = 'n';
+        } else if (isCr) {
+            c = 'r';
+        }
+        escape(c, appendable);
+    }
+
+    // Helper method to escape delimiter characters
+    private void escapeDelimiterChars(final CharSequence charSeq, final Appendable appendable, int pos, final int delimLength) throws IOException {
+        for (int i = 1; i < delimLength; i++) {
+            escape(charSeq.charAt(pos + i), appendable);
         }
     }
 

@@ -187,24 +187,36 @@ public class CSVFormatTest {
     @SuppressWarnings("deprecation")
     @Test
     public void testDuplicateHeaderElementsTrue_Deprecated() {
-        CSVFormat.DEFAULT.withAllowDuplicateHeaderNames(true).withHeader("A", "A");
+        CSVFormat format = CSVFormat.DEFAULT.withAllowDuplicateHeaderNames(true).withHeader("A", "A");
+        assertNotNull(format);
+        assertArrayEquals(new String[] { "A", "A" }, format.getHeader());
+        assertEquals(2, format.getHeader().length);
     }
 
     @SuppressWarnings("deprecation")
     @Test
     public void testDuplicateHeaderElementsTrueContainsEmpty1() {
-        CSVFormat.DEFAULT.builder().setAllowDuplicateHeaderNames(false).setHeader("A", "", "B", "").get();
+        CSVFormat format = CSVFormat.DEFAULT.builder().setAllowDuplicateHeaderNames(false).setHeader("A", "", "B", "").get();
+        assertNotNull(format);
+        assertArrayEquals(new String[] { "A", "", "B", "" }, format.getHeader());
+        assertEquals(4, format.getHeader().length);
     }
 
     @Test
     public void testDuplicateHeaderElementsTrueContainsEmpty2() {
-        CSVFormat.DEFAULT.builder().setDuplicateHeaderMode(DuplicateHeaderMode.ALLOW_EMPTY).setHeader("A", "", "B", "").get();
+        CSVFormat format = CSVFormat.DEFAULT.builder().setDuplicateHeaderMode(DuplicateHeaderMode.ALLOW_EMPTY).setHeader("A", "", "B", "").get();
+        assertNotNull(format);
+        assertArrayEquals(new String[] { "A", "", "B", "" }, format.getHeader());
+        assertEquals(4, format.getHeader().length);
     }
 
     @SuppressWarnings("deprecation")
     @Test
     public void testDuplicateHeaderElementsTrueContainsEmpty3() {
-        CSVFormat.DEFAULT.builder().setAllowDuplicateHeaderNames(false).setAllowMissingColumnNames(true).setHeader("A", "", "B", "").get();
+        CSVFormat format = CSVFormat.DEFAULT.builder().setAllowDuplicateHeaderNames(false).setAllowMissingColumnNames(true).setHeader("A", "", "B", "").get();
+        assertNotNull(format);
+        assertArrayEquals(new String[] { "A", "", "B", "" }, format.getHeader());
+        assertEquals(4, format.getHeader().length);
     }
 
     @Test

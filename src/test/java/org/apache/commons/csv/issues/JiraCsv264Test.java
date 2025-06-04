@@ -19,10 +19,13 @@
 
 package org.apache.commons.csv.issues;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
 import java.io.IOException;
 import java.io.StringReader;
+import java.util.Arrays;
 
 import org.apache.commons.csv.CSVFormat;
 import org.apache.commons.csv.CSVParser;
@@ -70,7 +73,12 @@ public class JiraCsv264Test {
             .setAllowMissingColumnNames(true)
             .get();
         try (StringReader reader = new StringReader(CSV_STRING_GAP); CSVParser parser = csvFormat.parse(reader)) {
-            // empty
+            // Assert that header names are as expected (gaps are empty strings)
+            assertNotNull(parser.getHeaderNames());
+            assertEquals(5, parser.getHeaderNames().size());
+            assertEquals(Arrays.asList("A", "B", "", "", "E"), parser.getHeaderNames());
+            // Optionally, check that records are parsed
+            assertEquals(2, parser.getRecords().size());
         }
     }
 

@@ -18,6 +18,8 @@
  */
 package org.apache.commons.csv.issues;
 
+import static org.junit.jupiter.api.Assertions.assertTrue;
+
 import java.io.File;
 import java.io.IOException;
 import java.io.Reader;
@@ -65,6 +67,8 @@ public class JiraCsv213Test {
 
     @Test
     public void test() {
-        createEndChannel(new File("src/test/resources/org/apache/commons/csv/CSV-213/999751170.patch.csv"));
+        File csvFile = new File("src/test/resources/org/apache/commons/csv/CSV-213/999751170.patch.csv");
+        assertTrue(csvFile.exists(), "CSV file should exist for the test");
+        createEndChannel(csvFile);
     }
 }

@@ -350,6 +350,8 @@ public class PerformanceTest {
         PerformanceTest.Stats stats = new PerformanceTest.Stats(10, 20);
         assertEquals(10, stats.count);
         assertEquals(20, stats.fields);
+        // Additional assertion: verify that Stats object is not null
+        assertNotNull(stats, "Stats object should not be null");
     }
 
     @Test

@@ -838,17 +838,23 @@ public class CSVFormatTest {
         assertFalse(csvFormatTwo.getTrim());
 
     }
-
+    
     @SuppressWarnings("deprecation")
     @Test
     public void testJiraCsv236() {
-        CSVFormat.DEFAULT.builder().setAllowDuplicateHeaderNames(true).setHeader("CC", "VV", "VV").get();
+        CSVFormat format = CSVFormat.DEFAULT.builder().setAllowDuplicateHeaderNames(true).setHeader("CC", "VV", "VV").get();
+        assertNotNull(format);
+        assertArrayEquals(new String[] { "CC", "VV", "VV" }, format.getHeader());
+        assertEquals(3, format.getHeader().length);
     }
 
     @SuppressWarnings("deprecation")
     @Test
     public void testJiraCsv236__Deprecated() {
-        CSVFormat.DEFAULT.withAllowDuplicateHeaderNames().withHeader("CC", "VV", "VV");
+        CSVFormat format = CSVFormat.DEFAULT.withAllowDuplicateHeaderNames().withHeader("CC", "VV", "VV");
+        assertNotNull(format);
+        assertArrayEquals(new String[] { "CC", "VV", "VV" }, format.getHeader());
+        assertEquals(3, format.getHeader().length);
     }
 
     @SuppressWarnings("deprecation")

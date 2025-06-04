@@ -2367,8 +2367,8 @@ public final class CSVFormat implements Serializable {
     }
 
     /*
-     * This method must only be called if escaping is enabled, otherwise can throw exceptions.
-     */
+    * This method must only be called if escaping is enabled, otherwise can throw exceptions.
+    */
     private void printWithEscapes(final Reader reader, final Appendable appendable) throws IOException {
         int start = 0;
         int pos = 0;
@@ -2380,31 +2380,23 @@ public final class CSVFormat implements Serializable {
         final StringBuilder builder = new StringBuilder(IOUtils.DEFAULT_BUFFER_SIZE);
         int c;
         final char[] lookAheadBuffer = new char[delimLength - 1];
+
         while (EOF != (c = bufferedReader.read())) {
             builder.append((char) c);
             Arrays.fill(lookAheadBuffer, (char) 0);
             bufferedReader.peek(lookAheadBuffer);
             final String test = builder.toString() + new String(lookAheadBuffer);
+
             final boolean isDelimiterStart = isDelimiter((char) c, test, pos, delimArray, delimLength);
             final boolean isCr = c == Constants.CR;
             final boolean isLf = c == Constants.LF;
-            if (isCr || isLf || c == escape || isDelimiterStart) {
-                // write out segment up until this char
-                if (pos > start) {
-                    append(builder.substring(start, pos), appendable);
-                    builder.setLength(0);
-                    pos = -1;
-                }
-                if (isLf) {
-                    c = 'n';
-                } else if (isCr) {
-                    c = 'r';
-                }
-                escape((char) c, appendable);
+            final boolean needsEscape = isCr || isLf || c == escape || isDelimiterStart;
+
+            if (needsEscape) {
+                writeSegmentAndEscape(builder, appendable, start, pos, c, isCr, isLf);
+
                 if (isDelimiterStart) {
-                    for (int i = 1; i < delimLength; i++) {
-                        escape((char) bufferedReader.read(), appendable);
-                    }
+                    escapeDelimiterChars(bufferedReader, appendable, delimLength);
                 }
                 start = pos + 1; // start on the current char after this one
             }
@@ -2416,6 +2408,30 @@ public final class CSVFormat implements Serializable {
         }
     }
 
+    // Helper to write out segment and escape special char
+    private void writeSegmentAndEscape(StringBuilder builder, Appendable appendable, int start, int pos, int c, boolean isCr, boolean isLf) throws IOException {
+        if (pos > start) {
+            append(builder.substring(start, pos), appendable);
+            builder.setLength(0);
+        }
+        if (isLf) {
+            c = 'n';
+        } else if (isCr) {
+            c = 'r';
+        }
+        escape((char) c, appendable);
+    }
+
+    // Helper to escape delimiter chars from the reader
+    private void escapeDelimiterChars(ExtendedBufferedReader bufferedReader, Appendable appendable, int delimLength) throws IOException {
+        for (int i = 1; i < delimLength; i++) {
+            int nextChar = bufferedReader.read();
+            if (nextChar != EOF) {
+                escape((char) nextChar, appendable);
+            }
+        }
+    }
+    
     /*
      * This method must only be called if quoting is enabled, otherwise will generate NPE.
      * The original object is needed so can check for Number

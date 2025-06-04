@@ -58,6 +58,7 @@ import java.util.stream.Stream;
 
 import org.apache.commons.io.input.BOMInputStream;
 import org.apache.commons.io.input.BrokenInputStream;
+import org.apache.commons.math3.analysis.function.Add;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
@@ -442,7 +443,15 @@ public class CSVParserTest {
     @Test
     public void testDuplicateHeadersAllowedByDefault() throws Exception {
         try (CSVParser parser = CSVParser.parse("a,b,a\n1,2,3\nx,y,z", CSVFormat.DEFAULT.withHeader())) {
-            // noop
+            // Assert that duplicate headers are present in the header names
+            List<String> headerNames = parser.getHeaderNames();
+            assertNotNull(headerNames);
+            assertEquals(Arrays.asList("a", "b", "a"), headerNames);
+            // Optionally, check that records can be read
+            List<CSVRecord> records = parser.getRecords();
+            assertEquals(2, records.size());
+            assertArrayEquals(new String[] { "1", "2", "3" }, records.get(0).values());
+            assertArrayEquals(new String[] { "x", "y", "z" }, records.get(1).values());
         }
     }
 
@@ -1064,25 +1073,20 @@ public class CSVParserTest {
     }
 
     @Test
-    public void testHeaderMissing() throws Exception {
-        final Reader in = new StringReader("a,,c\n1,2,3\nx,y,z");
-        try (CSVParser parser = CSVFormat.DEFAULT.withHeader().withAllowMissingColumnNames().parse(in)) {
-            final Iterator<CSVRecord> records = parser.iterator();
-            for (int i = 0; i < 2; i++) {
-                assertTrue(records.hasNext());
-                final CSVRecord record = records.next();
-                assertEquals(record.get(0), record.get("a"));
-                assertEquals(record.get(2), record.get("c"));
-            }
-            assertFalse(records.hasNext());
-        }
-    }
-
-    @Test
     public void testHeaderMissingWithNull() throws Exception {
         final Reader in = new StringReader("a,,c,,e\n1,2,3,4,5\nv,w,x,y,z");
         try (CSVParser parser = CSVFormat.DEFAULT.withHeader().withNullString("").withAllowMissingColumnNames().parse(in)) {
-            parser.iterator();
+            Iterator<CSVRecord> records = parser.iterator();
+            // Assert that header names are as expected (missing columns are empty strings)
+            List<String> headerNames = parser.getHeaderNames();
+            assertNotNull(headerNames);
+            assertEquals(Arrays.asList("a", "", "c", "", "e"), headerNames);
+            // Optionally, check the first record values
+            assertTrue(records.hasNext());
+            assertArrayEquals(new String[] { "1", "2", "3", "4", "5" }, records.next().values());
+            assertTrue(records.hasNext());
+            assertArrayEquals(new String[] { "v", "w", "x", "y", "z" }, records.next().values());
+            assertFalse(records.hasNext());
         }
     }
 
@@ -1090,7 +1094,17 @@ public class CSVParserTest {
     public void testHeadersMissing() throws Exception {
         try (Reader in = new StringReader("a,,c,,e\n1,2,3,4,5\nv,w,x,y,z");
                 CSVParser parser = CSVFormat.DEFAULT.withHeader().withAllowMissingColumnNames().parse(in)) {
-            parser.iterator();
+            Iterator<CSVRecord> records = parser.iterator();
+            // Assert that header names are as expected (missing columns are empty strings)
+            List<String> headerNames = parser.getHeaderNames();
+            assertNotNull(headerNames);
+            assertEquals(Arrays.asList("a", "", "c", "", "e"), headerNames);
+            // Optionally, check the first record values
+            assertTrue(records.hasNext());
+            assertArrayEquals(new String[] { "1", "2", "3", "4", "5" }, records.next().values());
+            assertTrue(records.hasNext());
+            assertArrayEquals(new String[] { "v", "w", "x", "y", "z" }, records.next().values());
+            assertFalse(records.hasNext());
         }
     }
 

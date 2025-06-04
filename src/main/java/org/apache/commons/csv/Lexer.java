@@ -354,7 +354,6 @@ final class Lexer implements Closeable {
      */
     private Token parseEncapsulatedToken(final Token token) throws IOException {
         token.isQuoted = true;
-        // Save current line number in case needed for IOE
         final long startLineNumber = getCurrentLineNumber();
         int c;
         while (true) {
@@ -362,52 +361,65 @@ final class Lexer implements Closeable {
 
             if (isQuoteChar(c)) {
                 if (isQuoteChar(reader.peek())) {
-                    // double or escaped encapsulator -> add single encapsulator to token
-                    c = reader.read();
-                    token.content.append((char) c);
+                    handleDoubleOrEscapedEncapsulator(token);
                 } else {
-                    // token finish mark (encapsulator) reached: ignore whitespace till delimiter
-                    while (true) {
-                        c = reader.read();
-                        if (isDelimiter(c)) {
-                            token.type = Token.Type.TOKEN;
-                            return token;
-                        }
-                        if (isEndOfFile(c)) {
-                            token.type = Token.Type.EOF;
-                            token.isReady = true; // There is data at EOF
-                            return token;
-                        }
-                        if (readEndOfLine(c)) {
-                            token.type = Token.Type.EORECORD;
-                            return token;
-                        }
-                        if (trailingData) {
-                            token.content.append((char) c);
-                        } else if (!Character.isWhitespace((char) c)) {
-                            // error invalid char between token and next delimiter
-                            throw new CSVException("Invalid character between encapsulated token and delimiter at line: %,d, position: %,d",
-                                    getCurrentLineNumber(), getCharacterPosition());
-                        }
-                    }
+                    return handleEncapsulatorEnd(token, startLineNumber);
                 }
             } else if (isEscape(c)) {
                 appendNextEscapedCharacterToToken(token);
             } else if (isEndOfFile(c)) {
-                if (lenientEof) {
-                    token.type = Token.Type.EOF;
-                    token.isReady = true; // There is data at EOF
-                    return token;
-                }
-                // error condition (end of file before end of token)
-                throw new CSVException("(startline %,d) EOF reached before encapsulated token finished", startLineNumber);
+                handleEofInEncapsulated(token, startLineNumber);
             } else {
-                // consume character
                 token.content.append((char) c);
             }
         }
     }
 
+    // Helper for double or escaped encapsulator
+    private void handleDoubleOrEscapedEncapsulator(final Token token) throws IOException {
+        int c = reader.read();
+        token.content.append((char) c);
+    }
+
+    // Helper for handling the end of an encapsulated token
+    private Token handleEncapsulatorEnd(final Token token, final long startLineNumber) throws IOException {
+        int c;
+        while (true) {
+            c = reader.read();
+            if (isDelimiter(c)) {
+                token.type = Token.Type.TOKEN;
+                return token;
+            }
+            if (isEndOfFile(c)) {
+                token.type = Token.Type.EOF;
+                token.isReady = true;
+                return token;
+            }
+            if (readEndOfLine(c)) {
+                token.type = Token.Type.EORECORD;
+                return token;
+            }
+            if (trailingData) {
+                token.content.append((char) c);
+            } else if (!Character.isWhitespace((char) c)) {
+                throw new CSVException(
+                    "Invalid character between encapsulated token and delimiter at line: %,d, position: %,d",
+                    getCurrentLineNumber(), getCharacterPosition());
+            }
+            // else: skip whitespace
+        }
+    }
+
+    // Helper for EOF inside encapsulated token
+    private void handleEofInEncapsulated(final Token token, final long startLineNumber) throws CSVException {
+        if (lenientEof) {
+            token.type = Token.Type.EOF;
+            token.isReady = true;
+            throw new CSVException("(startline %,d) EOF reached before encapsulated token finished", startLineNumber);
+        }
+        // error condition (end of file before end of token)
+        throw new CSVException("(startline %,d) EOF reached before encapsulated token finished", startLineNumber);
+    }
     /**
      * Parses a simple token.
      * <p>
